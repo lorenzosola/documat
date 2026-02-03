@@ -164,6 +164,7 @@ curl -X GET "http://localhost:8080/api/documents/search?keyword=report" \
 - **File Upload**: Size limits and MIME type validation (PDF, Word, Excel, images)
 - **CORS**: Configurable allowed origins (default: localhost)
 - **Configuration**: Support for environment variables to avoid hardcoding secrets
+- **CSRF Protection**: Disabled for stateless JWT API (CSRF is not applicable to stateless REST APIs using bearer tokens)
 
 ### Security Best Practices
 
@@ -175,6 +176,7 @@ For production deployments:
 4. **Strong JWT secret**: Use a long, randomly generated secret key
 5. **Logging levels**: Set logging to INFO or WARN in production (not DEBUG)
 6. **File upload restrictions**: Review and adjust allowed MIME types based on your needs
+7. **Token Storage**: Clients should store JWT tokens securely (not in localStorage for web apps; use httpOnly cookies or secure storage)
 
 Example production environment variables:
 ```bash
@@ -186,6 +188,15 @@ export CORS_ALLOWED_ORIGINS=https://your-domain.com
 export LOG_LEVEL=INFO
 export SECURITY_LOG_LEVEL=WARN
 ```
+
+### Why CSRF Protection is Disabled
+
+This application disables CSRF protection because it uses stateless JWT authentication. CSRF attacks are not applicable to:
+- Stateless REST APIs
+- APIs that use bearer token authentication (Authorization header)
+- APIs with no session cookies
+
+If you plan to add session-based authentication or use cookies for authentication, you should re-enable CSRF protection.
 
 ## Development
 
