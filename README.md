@@ -57,12 +57,22 @@ FLUSH PRIVILEGES;
 
 ### 3. Configure Database Connection
 
-Edit `documat-server/src/main/resources/application.properties`:
+Edit `documat-server/src/main/resources/application.properties` or set environment variables:
 
 ```properties
 spring.datasource.url=jdbc:mysql://localhost:3306/documat_db
 spring.datasource.username=documat_user
 spring.datasource.password=your_password
+```
+
+**For production, use environment variables instead of hardcoding credentials:**
+
+```bash
+export DB_URL=jdbc:mysql://localhost:3306/documat_db
+export DB_USERNAME=documat_user
+export DB_PASSWORD=your_secure_password
+export JWT_SECRET=your_long_random_secret_key_base64_encoded
+export CORS_ALLOWED_ORIGINS=https://your-domain.com
 ```
 
 ### 4. Build the Project
@@ -148,10 +158,34 @@ curl -X GET "http://localhost:8080/api/documents/search?keyword=report" \
 
 ## Security
 
-- Passwords are encrypted using BCrypt
-- API endpoints are protected with JWT authentication
-- Role-based access control for sensitive operations
-- File upload size limits and type validation
+- **Passwords**: Encrypted using BCrypt
+- **Authentication**: JWT-based token authentication
+- **Authorization**: Role-based access control for sensitive operations
+- **File Upload**: Size limits and MIME type validation (PDF, Word, Excel, images)
+- **CORS**: Configurable allowed origins (default: localhost)
+- **Configuration**: Support for environment variables to avoid hardcoding secrets
+
+### Security Best Practices
+
+For production deployments:
+
+1. **Never commit secrets**: Use environment variables for database credentials and JWT secrets
+2. **Configure CORS properly**: Set `CORS_ALLOWED_ORIGINS` to your specific domain(s)
+3. **Use HTTPS**: Always use SSL/TLS in production
+4. **Strong JWT secret**: Use a long, randomly generated secret key
+5. **Logging levels**: Set logging to INFO or WARN in production (not DEBUG)
+6. **File upload restrictions**: Review and adjust allowed MIME types based on your needs
+
+Example production environment variables:
+```bash
+export DB_URL=jdbc:mysql://prod-db-server:3306/documat_db?useSSL=true
+export DB_USERNAME=documat_prod_user
+export DB_PASSWORD=your_very_secure_password
+export JWT_SECRET=$(openssl rand -base64 64)
+export CORS_ALLOWED_ORIGINS=https://your-domain.com
+export LOG_LEVEL=INFO
+export SECURITY_LOG_LEVEL=WARN
+```
 
 ## Development
 

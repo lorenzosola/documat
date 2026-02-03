@@ -39,6 +39,9 @@ public class DocumentService {
         User owner = userRepository.findByUsername(username)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
+        // Validate file type
+        validateFileType(file);
+
         // Create upload directory if it doesn't exist
         Path uploadPath = Paths.get(uploadDir);
         if (!Files.exists(uploadPath)) {
@@ -67,6 +70,32 @@ public class DocumentService {
 
         document = documentRepository.save(document);
         return convertToDto(document);
+    }
+
+    private void validateFileType(MultipartFile file) {
+        String contentType = file.getContentType();
+        String filename = file.getOriginalFilename();
+        
+        if (filename == null || filename.isEmpty()) {
+            throw new IllegalArgumentException("Filename cannot be empty");
+        }
+        
+        // Allowed MIME types for documents
+        List<String> allowedMimeTypes = List.of(
+            "application/pdf",
+            "application/msword",
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            "application/vnd.ms-excel",
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            "text/plain",
+            "image/jpeg",
+            "image/png",
+            "image/gif"
+        );
+        
+        if (contentType == null || !allowedMimeTypes.contains(contentType)) {
+            throw new IllegalArgumentException("File type not allowed: " + contentType);
+        }
     }
 
     public List<DocumentDto> getAllDocuments() {
@@ -106,6 +135,7 @@ public class DocumentService {
             Files.deleteIfExists(filePath);
         } catch (IOException e) {
             // Log error but continue with database deletion
+            System.err.println("Failed to delete file: " + document.getFilePath() + " - " + e.getMessage());
         }
         
         documentRepository.delete(document);

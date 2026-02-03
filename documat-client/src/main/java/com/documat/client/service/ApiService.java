@@ -8,7 +8,7 @@ import java.io.IOException;
 
 public class ApiService {
     
-    private static final String BASE_URL = "http://localhost:8080/api";
+    private static final String BASE_URL = System.getProperty("api.base.url", "http://localhost:8080/api");
     private static final OkHttpClient client = new OkHttpClient();
     private static final Gson gson = new Gson();
     private static String jwtToken = null;

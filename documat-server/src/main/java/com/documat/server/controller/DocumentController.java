@@ -17,7 +17,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/documents")
-@CrossOrigin(origins = "*", maxAge = 3600)
 public class DocumentController {
 
     @Autowired

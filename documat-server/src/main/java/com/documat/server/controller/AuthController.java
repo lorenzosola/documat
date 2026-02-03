@@ -28,7 +28,6 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/auth")
-@CrossOrigin(origins = "*", maxAge = 3600)
 public class AuthController {
 
     @Autowired
@@ -90,22 +89,8 @@ public class AuthController {
             roles.add(userRole);
         } else {
             strRoles.forEach(role -> {
-                switch (role) {
-                    case "admin":
-                        Role adminRole = roleRepository.findByName(Role.RoleName.ROLE_ADMIN)
-                                .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
-                        roles.add(adminRole);
-                        break;
-                    case "manager":
-                        Role managerRole = roleRepository.findByName(Role.RoleName.ROLE_MANAGER)
-                                .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
-                        roles.add(managerRole);
-                        break;
-                    default:
-                        Role userRole = roleRepository.findByName(Role.RoleName.ROLE_USER)
-                                .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
-                        roles.add(userRole);
-                }
+                Role foundRole = getRoleByName(role);
+                roles.add(foundRole);
             });
         }
 
@@ -113,5 +98,21 @@ public class AuthController {
         userRepository.save(user);
 
         return ResponseEntity.ok(new MessageResponse("User registered successfully!"));
+    }
+
+    private Role getRoleByName(String roleName) {
+        Role.RoleName roleEnum;
+        switch (roleName.toLowerCase()) {
+            case "admin":
+                roleEnum = Role.RoleName.ROLE_ADMIN;
+                break;
+            case "manager":
+                roleEnum = Role.RoleName.ROLE_MANAGER;
+                break;
+            default:
+                roleEnum = Role.RoleName.ROLE_USER;
+        }
+        return roleRepository.findByName(roleEnum)
+                .orElseThrow(() -> new RuntimeException("Error: Role " + roleEnum + " is not found."));
     }
 }
