@@ -1,0 +1,2 @@
+/usr/local/lib/jdk1.6.0_25/bin/java -cp /home/lsola/documat/DeploymentServerSide/documatBin.jar:/home/lsola/documat/DeploymentServerSide/mail.jar:/home/lsola/documat/DeploymentServerSide/jaybird-full-2.1.0.jar:/home/lsola/documat/DeploymentServerSide/mysql-connector-java-5.1.15-bin.jar -Djava.rmi.server.codebase=file:/home/lsola/documat/DeploymentServerSide/documatBin.jar -Djava.security.policy=server.policy remotizing.ServerSide
+

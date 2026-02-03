@@ -1,0 +1,3 @@
+grant codeBase "file:/home/lsola/documat/classes/" {
+    permission java.security.AllPermission;
+};

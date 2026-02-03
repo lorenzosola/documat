@@ -1,0 +1,35 @@
+#!/bin/bash
+#script per convertire pdf in testo  che, oltre a convertire il contenuto testuale,
+#appende tutto il testo che è possibile riconoscere all'interno di tutte le immagini per pdf stesso tramite ocr.
+#L'OCR utilizzato è tesseract oltre ad esso vengono utilizzati: pdftotext pdfimages.
+
+if [ "$1" = "" ]; then
+	echo utilizzo: pdfconvertion DirTemporaneaDiLavoro InputFileNamePath OutputFileNamePath
+	exit;
+fi
+
+pdfimages $2 $1;
+
+pdftotext $2 $3;
+
+tmp=`find $1 -name "*.pbm"`;
+tmp=$tmp\ `find $1 -name "*.ppm"`;
+separator="";
+#echo $tmp;
+catArgs=""
+rmArgs="";
+for i in $tmp
+do
+	convert $i $i.tif;
+	#echo $i $i.tif
+	#echo tesseract $i.tif $i;
+	tesseract $i.tif $i;
+	catArgs=$catArgs$separator$i.txt;
+	rmArgs=$rmArgs$separator$i*
+	separator=" ";
+	#echo $i;
+done
+#echo $catArgs;
+cat $catArgs >> $3;
+rm $rmArgs;
+echo "Fine"

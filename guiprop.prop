@@ -1,0 +1,18 @@
+#E` possibile registrare un utente di default per il login rendendo comodo l'utilizzo per un singolo utente su una stessa macchina.
+defaultUser=lsola
+defaultPassword=lsola
+
+#Indirizzo IP del server con il registry remoto
+RegServerIP = 10.201.5.192
+
+#Direttorio in cui vengono messi i file estratti (checkout).
+CheckOutDir = c:/tmp
+
+#Credenziali per accesso diretto a DB
+ConnString=jdbc:mysql://10.201.5.192:3306/documat
+DBUser=dmclient
+DBPassword=dmclient
+#DBUser=admin
+#DBPassword=mysqladmin
+#DBUser=sicurezza
+#DBPassword=sicurezza

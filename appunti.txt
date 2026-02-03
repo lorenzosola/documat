@@ -1,0 +1,228 @@
+I punti che riportano il simbolo (X) sono gia` stati elaborati; quelli che riportano il simbolo (I) sono Informazioni da tenere sempre in considerazione, specialmente per la stesura del manuale; i punti senza contrassegno sono da elaborare.
+
+-(I) Ho fatto un po' di prove in base alle quali risulta che per la conversione pdf/ps->asci e' migliore (anche se inseriche molte mandate a capo) il programma "pstotext" rispetto a "ps2ascii".
+
+-(X)Scartata l'ipotesi di utilizzo di PDFBox (il quale, oltretutto, richiede log4j) per la conversione da pdf a txt in quanto, oltre ad essere molto lento, ha lo stesso problema di pstotext. Confermatao quindi l'utilizzo di pstotext o di qualsiasi programma esterno in linguaggio nativo.
+
+-(X)L'utilizzo di un database come archivio sia dei documenti sia delle informazioni aggiuntive porta a vantaggi in prestazioni.
+	Con opportuni accorgimenti, pero', e' possibile riporre i contenuti in cartelle del filesystem in modo da renderli piu' accessibili e facilitare l'archiviazione differenziale.
+	La ricerca di un file all'interno di un direttorio in ext2/ext3 richiede la lettura ed il riconoscimento di tutti i nomi. Si consiglia pertanto o l'utilizzo di altri filesystem come per esempio XFS (migliori prestazioni ma meno maturo di ext2/ext3) oppure di riporre
+	i files in un struttura di direttori costituenti un albero. Opto per quest'utlima soluzione utilizzando come chiave di selezione dei nodi un numero da 0 a 100 che andra' a costituire il nome del direttorio (in ogni direttorio ci possono essere al massimo 100 sotto-direttori) in una gerarchia fissa di 
+	profondita' 4 (100^4 direttori) in cui ogni direttorio foglia possa contenere 100 files (100^5 capacita' totale dell'archivio = 10^4 files).
+	Il db associera' le informazioni extra per ogni file ad un percorso della gerarchia.
+	Lo riempimento avviene distribuendo uniformemente i files in tutti i direttori foglia in sequenza: due files inseriti nello stesso momento non si troveranno mai nello stesso direttorio. In questo modo sara' praticamente impossibile creare conflitti con i nomi e se questo avvenisse bastera' cambiare direttorio.
+	Prima dell'inserimento viene cercato nel DB il numero di versioni del medesimo file presenti simultaneamente nell'archivio ad albero. Se questo supera il parametro MaxStorico scritto nel file delle propriet?, il programma provvede ad eliminare il file con (verione minore ?) data di modifica minore e a fare l'update al posto dell'insert sul DB.
+	La scelta di considerar la data di modifica anziche la versione nell'atto della sostituzione e` mirata ad evitare che piu' inserimenti successivi dello stesso file eliminino le versioni effettivamente precedenti.
+	Da tutto questo si deduce che se il parametro MaxStorico viene cambiato nel ciclo id vita dell'applicazione i dati rimangono coerenti: se il valore diminuisce ad inserimenti successivi del medesimo file le versioni presenti diminuiranno fino a raggiungere tale valore, se il parametro viene incrementato
+	ad ogni inserimento aumenteranno le versioni simultane fino al suo raggiungimento, questo ? valido sia per il DB sia per l'archivio ad albero.
+ 
+-(X) Gli unici file che non si riescono a convertire in ascii sono quelli con font non scalabili (per esempio i pdf che crea LyX quando non si cambiano le impostazioni di default) ma per fortuna sono in numero molto minore rispetto agli altri.
+	Questo significa che la funzione di inserimento deve annotare se il file non e` stato convertito correttamente ed eventualmente chiedere di inserire una descrizione in forato testo dello stesso la quale verra` riposta nel DB interno oppure (meglio) salvata nel file ascii dei contenuti al posto del risultato della conversione automatica.
+
+-(X)Valutare l'utilizzo delle RMI per il dialogo client-server.
+	-Approvato pienamente tale utilizzo.
+
+-(X)I raggruppamenti dei files possono avvenire in modo flesibile: l'utente puo' scegliere tra i gruppi (o concetti) presenti dul DB oppure crearne altri tramite alcune parole chiave, i files possono essere associati arbitrariamente a piu' gruppi ma solo dall'utente proprietario.
+
+-(X)Creato lo script nella cartella scripts che aggiunge al server FireBird gli utenti utilizzati da Documat nel DB.
+	In questo modo si rende possibile una selezione tramite combinazioni di piu' gruppi scelti esplicitamente o automaticamente tramite autenticazione.
+ 
+-(I)In ext* le directory sono file speciali che contengono la lista dei nomi
+ 	dei file con associati gli inode.
+	Nelle ultime versioni del 2.4 (non so esattamente da quando) si possono
+	usare i b-tree con hash per accelerare le ricerche. Basta formattare la
+	partizione con:
+	mke2fs -O dir_index (eventualmente con -j per ext3, ecc.)
+
+-(X)Ottimo programma di gestione di MySQL per Linux: MySQLCC. Password dell'amministratore di MySQL (utente root) su lorenzo: root.
+	MySQLCC non sembra gestire le foreign key cosa che invece fa MySQL Administrator anche se, ovviamente solo per tabelle di tipo InnoDB.
+	In MySQL: non sono permessi trigger ma non costituisce un grosso problema in quanto esistono i campi autoincrementanti.
+
+-(X)Passo all'utilizzo di FireBird perche' lo conosco meglio ed e' meglio strutturato, inoltre implementa i trigger e le foreign key. Utente amministratore=SYSDBA, password=sysdba.
+	MySQL rimane comunque un ottimo DB che, per quanto ne sia venuto a conoscenza, e` in evoluzione (anche se forse un po patchato) ed offre ottime prestazioni.
+	Indici per ora necessari:
+	-tabella FILEINFO: su NOMEFILE; su DATA
+	N.B. Un ottimo programma per amministrare graficamente le più comuni funzionalità di firebird è "FLAMEROBIN".
+	
+-(I)I direttori contenuti nel nodo radice dell'archivio ad albero in un filesystem unix possono essere convenientemente distribuiti su piu' dischi o addirittura piu' macchine in modo trasparente per il programma.
+
+-(I)Tenere tutti esterni i programmi di conversione in modo tale da permettere a chiunque abbia un compilatore C di svilupparli. Permettere quindi di impostare, nel file di configurazione, una associazione formato=comando
+	OK: nel file prop si deve ora inserire una linea formato=comando par1 par2 ... dove formato e' del tipo doc, pdf, ps,... e tra i parametri deve comparire un %i, che viene sostituito da DOCUMAT con il nome del file di ingresso, 
+	e puo' comparire un %o che viene sostituito, sempre da DOCUMAT, con il nome del file di uscita se il comando prevede la creazione di un file anziche' l'immissione dei dati elaborati su "standard output".
+	in cui il "comando" deve poter generare un file di testo (il cui percorso/nome e' passato come parametro) a partire dal file da convertire.
+	L'utilizzo di programmi di conversione che scrivano direttamente su file e' preferito perche' in tal modo lo svuotamento del buffer di uscita avviene direttamente ad opera del FileSystem di sistema senza passare attraverso la JVM risultando piu' veloce (e meno costoso).
+	-convertitore da doc a txt/pdf open platform:  antiword (ottimo) che ha l'unico difetto descritto dal seguente estratto dal manuale:
+	       	  Mapping files like 8859-1.txt
+              Antiword looks  for  its  mapping  files  in  three
+              directories, in the order given:
+              (1) The directory specified by $ANTIWORDHOME
+              (2) The directory specified by $HOME/.antiword
+              (3) Directory /usr/share/antiword
+	
+	
+-(I)Parole da escludere nel filtraggio pre-ricerca riportare nella tabella FILTERS_WORDS indicizzata tramite descrizione del gruppo di parole contenuta nella tabella FILTERS_DESCR.
+
+-(I)Provando ad escludere il lowercase nel filtro a tempo di ricerca non si guadagna quasi niente ma per il fatto che l'algo che determina la lingua richiede tutto lowercase decido di volgere anche i txt ad upper case in modo da semplificare il codice nella funzione filtro(...).
+
+-Per l'interfaccia grafia: la lista dei files trovati deve contenere un bollino il cui colore varia dal rosso al grigio in funzione del punteggio ottenuto rispetto al range totale (ottenibile facilmente con la getMax e getMin del SimpleNode).
+
+-(X)Nella tabella FILTERS_DESCR il campo LINGUISTICO viene impostato ad "1" el caso in cui il filtro serva per definire una lingua.
+
+-(X) Per la sicurezza e' necessario definire un utente con diritti di lettura e scrittura nel DB ed un utente con i soli diritti di lettura.
+	Il primo verra' utilizzato dalla classe GlobalCollector e correlate per le operazioni di inserimento mentre il secondo verra' utilizzato
+	dai cliets per le interrogazioni libere del DB.
+	-10/10/2006	Questo non dovrebbe piu` avvenire perche` l'accesso diretto avviene solo tramite server o tramite oggetti remoti istanziati dal serever (o cosi` dovrebbe essere)!!!!!!
+
+-(I)La sostituzione di un file per raggiungimento del numero massimo delle versioni avviene sempre in base alla data di modifica. Il numero di versioni viene calcolato basandosi sul nome dei file senza estensione.
+
+-(X)Aggiunta tabella GRP_CNCPT_WORDS che associa ad ogni GRP_CNCPT una serie di parole. Tali parole saranno utilizzata dall'algoritmo di classificazione automatica (calcolo gruppo di appartenenza) contenuto nell'inserter.
+	La procedura di calcolo non considera la parte finale delle parole nel documento se esse sono piu' lunghe ma con parte iniziale uguale, inoltre l'ultima lettera della parole in tabella e' sempre scartata (per aumentare la flessibilita` del confronto e non considerare, per esempio in lingua italiana e inglese, la differenza tra i plurali e i singolari).
+
+-(X)Regole per il DB: i client possono accedere direttamete solo ad alcune tabelle del DB:
+	-FILEINFO solo in lettura,
+	-FILTERS_DESCR in lettura e scrittura
+	-FILTERS_WORDS in lettura e scrittura,
+	-GRP_CNCPT in lettura e scrittura,
+	-GRP_CNCPT_WORDS in lettura e scrittura.
+	Tutte le altre tabelle sono accessibili solo dall'utente contenuto nel file properties.prop (normalmente DMSERVER) che ha pieni diritti su tutte le tabelle.
+	-10/10/2006	Questo non dovrebbe piu` avvenire perche` l'accesso diretto avviene solo tramite server o tramite oggetti remoti istanziati dal serever (o cosi` dovrebbe essere)!!!!!!
+
+-Non so dove sia il problema ma con l'uso che faccio dei drivers JDBC il corretto funzionamento si ottiene solo con firebird classic-server e non con firebid super-server (da un errore del tipo "impossibile aprire il file documat.gdb").
+
+-(I)Per una pulizia 'soft' del database cancellare le tabelle:
+	delete from fileinfo;
+	delete from lastpath;
+	delete from utenti;
+	delete from grp_cncpt_files (dovrebbe in realta` avvenire in automatico alla cancellazione di fileinfo)
+	
+-(I)Problemi di accesso al DB:
+	-Si ricorda che il file di database al gruppo "firebird" ed i permessi di accesso devono essere di lettura e scrittura sia per l'utente sia per il gruppo.
+		Una alternativa ? quella di aggiungere i diritti di accesso in lettura e scrittura per tutti gli altri utenti anche se in questo modo si riduce un po' la sicurezza del sistema (in fase di sviluppo puo' andare bene comunque...).
+		altrimenti si incorrera` in un errore del tipo "no permission for read-write access to database "
+	-Si ricorda, altressi, che nei files properties.prop e guiprop.prop il percorso del file di batabase deve essere corretto (controllare ad ogni installazione).
+	-Si ricorda altressi che in un sistema operativo Unix, per poter accedere ad un direttorio e' necessario renderlo eseguibile' e quindi se i direttori non appartendono al gruppo
+	firebird e' necessario che almeno per l'utente generico tutta la catena di direttori sia "eseguibile".
+
+-(I)Convertitori di documenti:
+	antiword, pstotext e pdftotext sono tutti parte di Bebian Sarge quindi la cartella convertitori si potrebbe praticamente eliminare ma per ora aspetto.
+	Se un documento pdf e` in un formato per cui con pdftotext non si puo` convertire correttamente si puo` sempre ricorrere ad un procedimento piu` universale
+	che consiste nell'utilizzo di un ocr a linea di comando quale "gocr" dopo aver utilizzato pdftoppn pper convertire il documento pdf in una serie di file .ppm.
+	In tal caso documat si dovra` occupare di convertire ed accodare ogni singola pagina (file) formato di bit-map al file di testo finale. Il procedimento e` molto piu`
+	lungo e dispendioso ma offre una possibilita` universale e di sicuro successo (a parte qualche parola non convertita esattamente) per chi non vuole farlo a mano con
+	un programma esterno.
+-(X)Grazie all'istanziazione dei TableDataManager sui client passando attraverso il GlobalCollector (TableDataManager dovra` essere un EJB remoto) ho svincolato il server dal dover fornire l'accesso al DB ai client per cui ora il livello di sicurezza e` uniforme (vedere come viene ottenuto un TableDataManager dal GLobalCollector).
+	Ho analizzato tutti gli stai possibili e mi sembra che questa struttura possa andare bene senza bisogno di altri miglioramenti (vai tranquillo e non pensarci piu` :-).
+
+-(X)Eseguire la ricerca del gruppo concettuale e della lingua attraverso il test del coseno: calcolare il coseno tra il vettore "parole del gruppo" ed il vettore "parole del testo" in cui ogni parola del testo presente anche nel gruppo costituisce un elemento del vettore ed assume il valore corripsondente al suo numero di posizioni;
+	ogni parola del gruppo rappresenta un elemento del vettore "gruppo" avente come valore quello corrispondente al suo numero di ripetizioni.
+	Chiaramente dovra` essere aggiunto il campo COUNTER nella tabella GRCPT_WORDS e periodicamente e necessario rinormalizzare il vettore introducento anche un meccanismo di selezione che elimina le parole del gruppo con valore al di sotto di una soglia.
+	
+-(I)Gli utenti possono gestire solamente i propri gruppi concettuali tramite il pannello sul client.
+	restano comunque utilizzabili, all'atto dellinserimento e della ricerca, anche quelli appartenenti ad altri utenti.
+ 
+-(I)La tabella dei filtri e delle lingue (FILTERS_WORDS) viene gestita solo dal server, infatti e` possibile aggiornarla con procedure automatiche di analisi e il vocabolario iniziale deve essere inserito dall'amministratore con apposita procedura automatica oppure, mal che vada, a mano.
+	Una cosa molto importante e` che ogni filtro lingua contenga solo le parole di congiunzione e non quelle significative. Questa infatti viene utilizzata per scopi quali il filtraggio automatico e 
+	
+-(I)Per inizializzazione di un DB vergine � suffuciente effettuare il login inserendo le credenziali: username=ADMIN, password=admin. In questo modo viene inserito l'utente ADMIN nella tabella degli utenti. Ovviamente questo viene fatto solo quando non esiste l'utente ADMIN.
+
+-(X)Se la versione del software e` single_host la chiusura del programma, inclusa la parte "server", puo` essere effettuata da qualsiasi utente.
+
+-(X)All'inizializzazione dell'interfaccia grafica della parte "client" venogno inserite di default le credenziali corrispondenti a quelle specificate dai campi defaultUser e defaultPassword nel file guiprop.prop e solo nel caso in cui queste esistano.
+	E` un accorgimento finalizzato solamente all'accrecimento dell'usabilita`.
+	
+-(X)All'inserimento di un documento nel DB devono essere salvate anche le parole significative e quelle del titolo.
+
+-(X)E` previsto l'inserimento di file aventi lo stesso nome, la stessa estensione ma titolo diverso. Nell'albero dell'archivio non verra` mai sovrascritto un file con lo stesso nome perche` questa casistica e`
+	gestita dalla procedura di inseriemnto e precisamente dalla getNewPath(.) che restituisce sempre un path coerente in base ad alcui valori di stato e dal nome del file.
+	Notare che nel DB il percorso di ogni contraddistinto file (nome case sensitive+estensione+versione oppure semplicemente l'ID) viene annotato sul record di FILEINFO.
+
+-(X)Il meccanismo di inserimento delle parole significative e` complesso: nel caso di nuove versioni esso inserisce nella tabella di gruppi->parole DB (o aggiorna il punteggio) le sole parole
+	passate come argomento nel iter di inserimento e solo se non risultano gia` presenti tra quelle inserite della precedente versione, nel caso di file nuovo viene inserita 
+	l'unione delle parole presenti nel titolo e quelle passate come argomento. Nel caso di nuova versione la rispettiva lista di parole sig. memorizzata viene aggiornata come unione.
+
+-(X)Eventualmente parole significative possono essere ottenute anche in automatico dal documento ma e` necessaria una procedura molto accurata per la loro estrazione.
+	Ora non e` propriamente corretta ma c'e` e in qualche modo funziona.
+
+-(I)Questo server, per rilevare se esistono file precedentemente archiviati, utilizza il nome del file, l'estensione, il titolo del documento (su cui effettua la ricerca approssimata, una lista di gruppi concettuali ed il minimo numero di essi a cui devono appartenere i files affinche` vengano analizzari.
+
+-Necessaria routine di background che trova le righe su FILEINFO che fanno riferimento ad un file non esistente in archivio e le cancella.
+
+-Necessaria routine di background che elimina le stop words da GRP_CNCPT_WORD in quanto tutti gli inserimenti vengono normalmente fatti indiscriminatamente.
+ Una lista di stop words per varie lingue la si pu� trovare in http://members.unine.ch/jacques.savoy/clef/index.html o in http://www.ranks.nl/resources/stopwords.html o in http://dnnspeedblog.com/SpeedBlog/PostID/3186/Italian-Stop-words (ammesso che siano ancora accessibili).
+
+-(X)Necessaria routine di background per la riclassificazione di elementi orfani (non piu` associati ad alcun gruppo per cancellazione dello stesso.
+	Tale procedura associa gli elementi orfani solo e solamente se non esistono gruppi ancora non associati in quanto se così non fosse non potrebbe essere
+	valido il confronto per mancanza di criteri.
+
+-(X)Necessaria routine di background per il ribilanciamento dei pesi delle sig_words ed eventuale eliminazione delle stesse con peso al di sotto di una certa soglia.
+	L'aggiornamento dei pesi avverrà per normalizzazione all'interno dei singoli gruppi, quindi l'intervento avviene separatamente per ognuno di essi.
+
+-Una idea per realizzare la routine di ricerca e` quella di utilizzare sempre il criterio del cos ma tra la frase di ricerca ed il flusso di parole del documento.
+	In pratica un confronto dinamico che consiste nel costruire un insieme di parole, da riempire con le parole che via via si incontran, nello scorrere
+	il documento dall'inizio alla fine, o con altri tipi di estrazione ordinata, in cui ad ogni ricorrenza si aggiorna il punteggio delle parole gia` presenti
+	con la modalita` della "media dinamica" o si aggionge la parola incontrata come "new entry" (avente un punteggio intermedio).
+	Si confronta, poi`, ad intervalli di N parole, dove N e` il numero di parole contenute nella frase di ricerca, l'insieme ottenuto (vettore "punteggio")
+	con la frase di ricerca stessa. Di tutti i risultati dei confronti (ottenuti con il criterio del coseno) si prende poi una media pesata.
+	Visivamente la dinamica e` chiara: un vettore che cambia dinamicamente ad ogni parola incontrata nella scansione del documento, che viene confrontato
+	di tanto in tanto con il vettore delle parole della frase di ricerca. La procedura descritta e` molto semplice ma almeno un fondamento matematico valido (vedere
+	criterio di confronto del coreno). Non si tiene conto dell'ordine delle parole sia nella frase di ricerca sia nel testo ma a questo si potrebbe ovviare con espedienti,
+	come, ad esempio, ad ogni parola associare le parola precendeti e quelle successive con rispettivi (per ogni combinazione parola->parola succ, parola->parola prec)
+	vettori aggiornati sempre con il criterio della media mobile e messi a confronto con la frase di ricerca con il metodo descritto utilizzando, di quest'ultima, 
+	i 2 vettori "ordine prec" "ordine succ". La cosa, pero` comporterebbe un overheading non trascurabile, soprattutto nell'occupazione di memoria.
+	Un'altra idea comletamente diversa, e` quella di considerare frasi del documento con scifting di N/n parole, dove N e` il numero di parole della frase di ricerca e
+	2 <= n <= N. Tali frasi saranno poi` confrontate con la frase di ricerca attraverso il metodo Morge-Elkan modificato da me (vedere algoritmo e commento).
+	Computazionalmente quest'ultmio e` forse piu oneroso (se nel primo si utilizzano 'Hashtable') ma almeno considerav l'ordine delle parole (se le 2 stringhe
+	sono ben formate e regolarizzate allo stesso modo) e senza occupare tanta memoria ma non arriva alle prestazioni del primo quando in esso si valuta anche l'ordine.
+	
+-(I)Liste di stopwords per diverse lingue si trovano all'indirizzo http://www.ranks.nl/tools/stopwords.html.
+
+-(I)Si puo` notare che lo schema del DB non rispetta la 2 forma normale almeno per quanto riguarda la relazione tra la tabella GRP_CNCPT_WORD e le tabella GRP_CNCPT e FILE_SIG_WORD.
+	Questo e` dovuto al fatto che per ogni istanza di GRP_CNCPT  esistono più istanze di GRP_CNCPT_WORDS anche se le parole possono essere in 	cumune tra diverse istanze di GRP_CNCPT.
+	Concettualmente la scelta sarebbe errata ma tecnicamente no in quanto si supponga si avere una tabella contenente solo parole chiamata WORD allora la tabella chiamata CRP_CNCPT_WORD
+	conterra` le associazioni tra istanze di GRP_CNCPT  e quelle di CRP_CNCPT_WORD.
+	In questo modo, pero`, supponendo definitiva la struttura di WORD (l'insieme dei campi non verra` espanso in futuro), ls tabella CRP_CNCPT_WORD contenente almeno 2 interi come campi, quindi in tutto 8 byte senza considerare l'overhear. Se si considera che mediamente
+	una parola e` di 8 byte, supponendo che i gruppi siano in numero ng e che le parole per ogni gruppo siano mediamente in numero np, 
+	e che le parole siano complessivamente npTot lo spazio necessario sarebbe semplificativamente a = ng*8 + (4+4)*gn*np + npTot * (8+4) dove il 4 e` il numero di byte per una foreign key o una primary key.
+	Nella situazione implementata, invece l'occupazione di memoria o`: b = ng*8 + ng*np*(8+4).
+	Quindi se npTop*(8+4) > ng*np*4 conviene la soluzione "tecnica" anche per il fatto che le interrogazioni sono molto più veloci e la complessità a livello di programmazione diminuisce.
+	Il vero svantaggio risiede nella dimensione della FILE_SIG_WORD in quanto ad ogni istanza di FILEINFO devono essere associate ng*ns (dove ns = numero medio di parole significative per elemento) istanze di FILE_SIG_WORD mentre nell primo caso ne basterebbero ns.
+	Tuttavia nella soluzione "tecnica" (quella adottata) risiede un vantaggio intrinseco (non importa complicare il DB): dopo l'inserimento di un nuovo elemento tutti i gruppi associati conterranno le parole significative specificate ma datqa l'esistenza di un processo
+	parallelo di decimazione selettiva della parole nei gruppi si avra` che ad ogni elemento sarà associato l'insieme di parole che per ognuno dei gruppi ad esso associati e` rimasto nell'insieme decimato per quel gruppo. La stesa cosa fatta nella forma normalizzata comporterebbe
+	che le istanze di FILE_SIG_WORD indicizzassero non le istanze di WORD ma quelle di  CRP_CNCPT_WORD il che farebbe ricadere nell'overhead dovuto al proliferare delle chiavi (ed eventualmente degli indici) e nella maggior complessita`, nonche` lentezza, delle query.
+	
+-(I)Gli elementi a livello di presentazione da parte del server, vengono identificati univocamente da un nome (nome del file senza estensione), da un titolo non case sensitive e da un utente, per cui con un nome,
+	un titolo (case unsensitive) ed un utente si ottengono tutte le versioni di uno stesso elemento.
+	Si considera l'utente come parte della chiave in quanto se così non fosse altri utenti potrebbero
+	modificare elementi non propri tramite un aggiornamento di versione potenzialmente violando la volontà di chi si incarica di gestire un elemento documentale su Documat ovvero l'autore dell'elemento (non necessariamente l'autore dei suoi contenuti informativi).ù
+	
+-(X)Sul client e sul server: possibilita` di associare come cotenuto testuale un file alternativo inviato dal client,
+	il quale potra` crearlo anche partendo dalla descrizione digitata manualmente nella maschera di l'inserimento.
+
+-Per convertire un file .ps o .pdf in Windows si può utilizzare ghostscrips a "linea di comando".
+	Qui sotto è riportato un esempio nel caso in cui si voglia convertire il file "c:\temp\capitolo6.ps" mettendo il risultato nel file "c:\temp\pippo.txt".
+	C:\Program Files\gs\gs8.61\bin>gswin32c -q -dSAFE -dNODISPLAY -dDELAYBIND -dWRITESYSTEMDICT -dSIMPLE -c save -f ..\lib	\ps2ascii.ps "c:\temp\capitolo6.ps" -c quit > c:\temp\pippo.txt
+	Attenzione perchè il programma deve essere avviato a partire dal direttorio dove si trova il .exe (solitamente C:\Program Files\gs\gs8.61\bin\) oppure specificando l'intero percorso.
+	L'esempio può essere estrapolato a partire dallo script di conversione "ps2ascii.bat" che si trova, assieme ad altri script di conversione, nel direttorio "C:\Program Files\gs\gs8.61\lib>"
+	(dove il numero di versione corrispondera eventualmente alla versione più aggiornata installata sul sistema).
+	Gswin32c è in grado di convertire anche altri formati in altri formati (.pdf con lo stesso comando sopra riportato) avviando il programma con gli opportuni flags.
+	Per effettuare altri tipi di conversione da "linea di comando" si rimanda alla documentazione allegata al programma.
+-(I)Se si inserisce una parola in un gruppo concettuale attraverso l'interfaccia di gestione dei gruppi non vengono controllati i duplicati in quanto si utilizza un TableDataManager che fa query standard, mentre all'inserimento di un documento viene utilizzata la apposita stored procedure sul server per cui non vengono mai inseriti duplicati.	
+-(I)Se nel file guiprop.prop non sono presenti tutte le credenziali per l'accesso diretto al DB (stringa di connessione, user, password) non vengono abilitate alcune maschere come, p.e., gestione utenti e gestione gruppi: in pratica non vengono abilitate le maschere che richiedono accesso diretto a DB.
+-(I)Per poter far funzionare JRMI su una macchina remota (l'utilizzo standard) ho dovuto modificare il file /etc/hosts come segue:
+	------------------------FILE HOSTS SUL SERVER-----------------------
+	10.201.5.192 debian
+	10.201.5.192 localhost.localdomain localhost
+
+	# The following lines are desirable for IPv6 capable hosts
+	::1 ip6-localhost ip6-loopback
+	fe00::0 ip6-localnet
+	ff00::0 ip6-mcastprefix
+	ff02::1 ip6-allnodes
+	ff02::2 ip6-allrouters
+	--------------------------------------------------------------------
+	In pratica ho modificato l'associazione dei 2 indirizzi debian e localghost, che di default � 127.0.0.1, con l'IP pubblico della macchina. 
+-(I)3/2011: Passo alll'uso di MySQL come DBMA per poter far funzionare il programma in Italpizza con il server MySQL gi� installato. Successivamente ho installato MySQL sul server che ho creato e gestito nel pool di Xen e la password iniziale per l'utente "root" �: "mysqladmin"; oppure: user=admin,password=mysqladmin.
+	Da notare che per potersi connettere da remoto (e anche da locale, ma non ho capito il perch�) il parametro "bind-address" nel file /etc/mysql/my.conf, che di default � impostato a 127.0.0.1, deve essere impostato con l'indirizzo IP pubblico della macchina.
+-(I)Dato che sul DB in MySql ho utilizzato tutti nomi in minuscolo ho dovuto volgere al minuscolo tutti i nomi delle tabelle nelle query del programma. I nomi dei campi rimangono "case unsensitive".
+-(I)In DeployentServerSide risiede lo script (per bash shell) "pdfconversion" il quale, tramite l'utilizzo di progrmmi quali "pdfimages", "pdftotext", "convert" e "tesseract" (OCR), dato un file pdf, provvede alla creazione di un file txt contenente tutto il testo estraibile dalla parte testuale e dalle immagini. Quest'utlimo viene accodato al primo e contiene il risultato del riconoscimento ottico della immagini eseguito nell'ordine in cui esse compaiono all'interno del PDF.
+-(I)Nel pannello "Attivita" la lista dei documenti coinvolti (a Sx) viene ordinata per nome e gruppo di appartenenza del documento (vedere la query: "complessa abbasta").  

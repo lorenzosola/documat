@@ -1,0 +1,126 @@
+tempdir=y:\\documatTempdir
+arctree=y:\\documatArctree
+
+DBType=mysql
+#DBType=firebird
+
+#Example: conString=jdbc:firebirdsql://DbIp/DbPath
+#where DbIp is the IP or DNS name of the server hosting the DBMS and DbPath is the path of the database file (on the same server) managed by DBMS.
+
+#Per Firebird:
+#connString=jdbc:firebirdsql://localhost/home/lsola/lollo/progettiSoftware/documat/db/documat.gdb
+#Stranamentte con la versione super-server la linea corretta e`:
+#connString=jdbc:firebirdsql:localhost:/home/lsola/lollo/progettiSoftware/documat/db/documat.gdb
+#ed ho visto su una faq che si tratta di una vecchia versione del formato.... Forse ora hanno corretto il problema
+
+#Per MySQL:
+connString=jdbc:mysql://10.201.5.192:3306/documat
+
+#Per Firebird:
+#user=DMSERVER
+#password=docuserv
+
+#Per MySQL:
+user=dmserver
+password=docuserv
+#user=admin
+#password=mysqladmin
+#user = sicurezza
+#password = sicurezza
+
+MaxHistory=3
+
+#The following parameter determines the max number of thread can be used by the search tasks.
+MaxThreads=2
+
+#Valid values for version: single_host, client-server. La differenza è che con "client-server" l'arresto del server viene richiesto solo quando le credenziali di ADMIN sono inserite.
+#version=client-server
+version=single_host
+
+#The following is for specify how many request can be simultaneously considered by the server.
+#This doesn't means that can be received SimActiveRequests request at the same instant without consequence
+#but that the server can compute a queue of request not bigger than. So if the queue of active requests is,
+#for example, 100 and the max number SimActiveRequests is 110 then can be received simultaneously another 10
+#requests without consequence. If overreques occurs then the older requests will be removed from the queue
+#with all theme relavive buffers.
+#Pay attention to this because the more the number is big the more old requests will remains active and usable by malicious. 
+#Ammettendo che il server riceva costantemente 10 rich/Sec allora il tempo massimo di funzionamento continuativo
+#sarebbe di: (2^32)/(10*3600*24) = 4971.026963 giorni = 13.61925 anni senza ripetere chiavi gia` utilizzate.
+#Quindi e` gia` soddisfacente. La chiave deve essere unica in tutto l'arco di funzionamento per come e` stato
+#strutturato il server, infatti molti oggetti utilizzati per bufferizzare e tracciare le richieste,
+#anche se con coda finita, necessitano di chiavi univocamente crescenti per tracciare l'ordine di arrivo ed
+#eventualmente eliminare le richieste scadute perche` troppo vecchie.
+SimActiveRequests=100
+
+#The following is for specify the timeout in mSec of any SearchManager (each manager compute a single search request).
+SearchManagerTimeout=30000
+
+#The following is for specify the persistence (in order to decrease the reload time for subsequent searches) 
+#in mSec of any allocated AutoFileBuffer hadled by SearchDispacher.
+#Can be eventually used in other part of code.
+AutoFileBuffersPersistence=60000
+
+#The following is for specify the timeout in mSec of a file insertion procedure, this determine also the time limit for an existence of a temporary file in the case that it is been leaved by a not completed file-insertion iter.
+InsertManagerTimeout=3600000
+
+#Delimiter pattern for word splitting of text data.
+DelimiterPattern=\t+|\n+|\r+|\f+|\\a+|\\e+|\\p{Punct}| +
+
+#StopWordsFilesDir must specify the directory in which there must be the stop words files.
+#That files must be named with the same name of the language to which the contained words belongs.
+#In each must be present a list of stop words in lower case and separed by a "line feed"
+#(10 in decimal, \n in C notation) caracter.
+StopWordsFilesDir=./stopWordsFiles
+
+#Tolleranza nella verifica di ambiguita`. Il valore deve essere in [0,1]: piu` e` basso piu` e` probabile che venga riscontrata l'ambiguita` dalla apposita funzione (vedere ambiguityCheck(....)).
+AmbiguityChkToll=0.08
+
+#Periodo di tempo in minuti dell'esecuzione dei task periodici.
+#Dopo la chiusura del programma da parte dell'utente il thread rimane comunque attivo per poi essere concluso prima del successivo ciclo di esecuzione (a distanza di t=BackgroundTaskInterval dal precedente). 
+BackgroundTaskInterval=1
+
+#Max Average Word Relevance per ogni gruppo concettuale. Quando il valore della media della relevance per le parole di un gruppo concettuale supera
+#questa soglia la procedura automatica (backgrouond task) di normalizzazione lo riporta a NormalWRA scalando le relevance scalando proporzionalmente
+#tutti i valori di ogni parola. Le parole che, in un determinato gruppo concettuele, hanno una relevance < 1 vengono eliminate dal gruppo stesso
+#(e solo quello).
+#Il valore di questo parametro deve esempre essere ragionevolmente > di NormalWRA in modo da evitare che le normalizzazioni avvengano con troppa frequenza.
+MaxWRA=10.00
+
+#Normal Average Word Relevance per ogni gruppo concettuale. 
+NormalWRA=5.00
+
+#Minimum Word Relevance per ogni gruppo concettuale. Se una parola di un gruppocconcettuale arriva a avere una relevance < al valore qui impostato essa viene eliminata dal DB.
+#Il valore di questo parametro deve essere sempre < NormalWRA di una quantitÃ  ragionavolmente grande in quanto se, per ipotesi assurda, fosse <si verificherebbe che dopo ogni
+#normalizzazione verrebero cancellate una gran quantitÃ  (nel caso estremo tutte) delle parole associate al gruppo su cui Ã¨ appena avvenuta la normalizzazione stessa.
+MinWRA=1.00
+
+#Per il parametri MaxWRA, NormalWRA e MinWRA valori normali potrebbero essere, rispettivamente, 10, 5, 1.
+
+#Parametri server di posta (out con SMTP; in con POP3).
+MailServerIP = 10.201.33.6
+MailServerPort = 25
+MailServerUName = lsola
+MailServerPassword = lorenzo4
+SMTPAuth = true
+FromAddress = lorenzo.sola@italpizza.it
+#CCAddress = 
+Subject = Attività da svolgere per mantenimento conformità.
+
+
+#--------------------------File Converter Association---------------------------
+#%i è il placeholder del nome del file di ingresso (con path completo)
+#%o è il placeholder del nome del file di uscita (con path completo)
+#%td è il placeholder di una eventuale dir temporanea dove il comando ripone eventuali file di interelaborazione (con path completo).
+#Ovviamente la posizione e la presenza/assenza dei placeholder su elencati dipende dalla forma della linea di comando.
+ 
+#pdf=/usr/bin/pdftotext %i %o
+pdf=/bin/bash /home/lsola/documat/DeploymentServerSide/pdfconversion /home/lsola/documatTempdir %td %i %o
+ps=/usr/bin/ps2ascii %i  %o
+doc=catdoc %i
+rtf=catdoc %i
+txt=cp %i %o
+html=html2text -nobs -o %o %i
+png=gocr -a 85 -i %i -o %o
+gif=gocr -i %i -o %o
+jpg=gocr -i %i -o %o
+jpeg=gocr -i %i -o %o

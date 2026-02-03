@@ -1,0 +1,8 @@
+tesseract-ocr
+pdfimages
+pdftotext
+convert
+graphicsmagick-imagemagick-compat
+mariadb-server
+mariadb-client
+

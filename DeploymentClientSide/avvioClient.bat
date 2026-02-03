@@ -1,0 +1,1 @@
+javaw -Djava.class.path=.\jaybird-full-2.1.0.jar;.\documatBin.jar;.\mysql-connector-java-5.1.15-bin.jar -Djava.security.policy=client.policy remotizing.ClientSide

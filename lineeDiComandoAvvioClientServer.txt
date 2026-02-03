@@ -1,0 +1,16 @@
+Si assume che il percorso base delle classi sia C:\home\lsola\documat\classes\ (può essere qualsiasi altro percorso....).
+Il parametro term108 passato alla linea di avvio del client è il nome di rete del computer su cui gira il server.
+Controllare anche i 2 file client.policy e server.policy per cambiare, eventualmente, i percorsi.
+
+Per il servizio di registry delle classi server:
+lanciare il programma "registry" che ri strova nel direttorio jre6\bin\
+
+Per il programma server nella cartella di sviluppo in Windows:
+java -cp C:\home\lsola\documat\classes\;C:\home\lsola\documat\lib\javamail-1.4.3\mail.jar;C:\home\lsola\documat\lib\Jaybird-2.1.0JDK_1.5\jaybird-full-2.1.0.jar;C:\home\lsola\documat\lib\mysql-connector-java-5.1.15\mysql-connector-java-5.1.15-bin.jar -Djava.rmi.server.codebase=file:/C:/home/lsola/documat/classes/ -Djava.security.policy=server.policy remotizing.ServerSide
+Per il programma server in Linux:
+Come sopra (tranne i path) ma mettere ":" al posto di ";"
+
+Per il client nella cartella di sviluppo in Windows:
+java -cp C:\home\lsola\documat\classes\;C:\home\lsola\documat\lib\Jaybird-2.1.0JDK_1.5\jaybird-full-2.1.0.jar;C:\home\lsola\documat\lib\mysql-connector-java-5.1.15\mysql-connector-java-5.1.15-bin.jar -Djava.rmi.server.codebase=file:/C:/home/lsola/documat/classes/ -Djava.security.policy=client.policy remotizing.ClientSide
+Per il programma client in Linux:
+Come sopra (tranne i path) ma mettere ":" al posto di ";"

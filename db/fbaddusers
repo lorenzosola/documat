@@ -1,0 +1,2 @@
+gsec -user sysdba -password sysdba -add dmclient -pw dmclient -fname gui -lname client
+gsec -user sysdba -password sysdba -add dmserver -pw docuserv -fname documat -lname server
