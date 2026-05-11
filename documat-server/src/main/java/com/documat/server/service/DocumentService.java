@@ -61,7 +61,7 @@ public class DocumentService {
         String uniqueFilename = UUID.randomUUID().toString() + fileExtension;
 
         // Resolve and normalize the destination; verify it is inside the upload directory
-        Path filePath = uploadPath.resolve(uniqueFilename).normalize();
+        Path filePath = uploadPath.resolve(uniqueFilename).toAbsolutePath().normalize();
         if (!filePath.startsWith(uploadPath)) {
             throw new IllegalArgumentException("Invalid file path");
         }

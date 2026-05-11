@@ -1,8 +1,6 @@
 package com.documat.server.controller;
 
 import com.documat.server.config.JwtUtils;
-import com.documat.server.dto.JwtResponse;
-import com.documat.server.dto.MessageResponse;
 import com.documat.server.entity.Role;
 import com.documat.server.entity.User;
 import com.documat.server.repository.RoleRepository;
@@ -136,7 +134,7 @@ class AuthControllerTest {
     }
 
     @Test
-    void login_invalidCredentials_returns500() throws Exception {
+    void login_invalidCredentials_returns401() throws Exception {
         when(authenticationManager.authenticate(any()))
                 .thenThrow(new BadCredentialsException("Bad credentials"));
 
@@ -144,7 +142,7 @@ class AuthControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(
                                 Map.of("username", "alice", "password", "wrongpassword"))))
-                .andExpect(status().is5xxServerError());
+                .andExpect(status().isUnauthorized());
     }
 
     @Test
