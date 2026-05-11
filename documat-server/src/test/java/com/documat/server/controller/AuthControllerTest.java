@@ -272,4 +272,3 @@ class AuthControllerTest {
         verify(roleRepository).findByName(Role.RoleName.ROLE_ADMIN);
     }
 }
-

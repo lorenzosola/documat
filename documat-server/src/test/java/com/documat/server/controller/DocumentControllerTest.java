@@ -261,4 +261,3 @@ class DocumentControllerTest {
                 .andExpect(status().isUnauthorized());
     }
 }
-

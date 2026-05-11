@@ -48,10 +48,16 @@ public class DocumentService {
             Files.createDirectories(uploadPath);
         }
 
-        // Generate unique filename
+        // Generate unique filename, sanitizing the extension to prevent path traversal
         String originalFilename = file.getOriginalFilename();
-        String fileExtension = originalFilename != null && originalFilename.contains(".") 
-            ? originalFilename.substring(originalFilename.lastIndexOf(".")) : "";
+        String fileExtension = "";
+        if (originalFilename != null && originalFilename.contains(".")) {
+            String rawExt = originalFilename.substring(originalFilename.lastIndexOf("."));
+            // Only allow alphanumeric extensions (e.g. .pdf, .docx) to prevent path injection
+            if (rawExt.matches("\\.[a-zA-Z0-9]+")) {
+                fileExtension = rawExt;
+            }
+        }
         String uniqueFilename = UUID.randomUUID().toString() + fileExtension;
         
         Path filePath = uploadPath.resolve(uniqueFilename);
