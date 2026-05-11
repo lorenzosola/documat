@@ -43,7 +43,7 @@ public class DocumentService {
         validateFileType(file);
 
         // Create upload directory if it doesn't exist
-        Path uploadPath = Paths.get(uploadDir);
+        Path uploadPath = Paths.get(uploadDir).toAbsolutePath().normalize();
         if (!Files.exists(uploadPath)) {
             Files.createDirectories(uploadPath);
         }
@@ -59,8 +59,12 @@ public class DocumentService {
             }
         }
         String uniqueFilename = UUID.randomUUID().toString() + fileExtension;
-        
-        Path filePath = uploadPath.resolve(uniqueFilename);
+
+        // Resolve and normalize the destination; verify it is inside the upload directory
+        Path filePath = uploadPath.resolve(uniqueFilename).normalize();
+        if (!filePath.startsWith(uploadPath)) {
+            throw new IllegalArgumentException("Invalid file path");
+        }
         Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
 
         Document document = new Document();
